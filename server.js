@@ -3,12 +3,11 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-
 const db = require('./config/db');
 const authRoutes = require('./routers/auth');
+const catalogRoutes = require('./routers/catalog');
 
 dotenv.config();
-
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -75,6 +74,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/api', catalogRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
