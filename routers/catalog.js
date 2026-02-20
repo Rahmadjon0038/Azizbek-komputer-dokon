@@ -150,6 +150,10 @@ router.patch('/computers/:id/cart', toggleCart);
  *               name:
  *                 type: string
  *                 example: Noutbuk
+ *               img:
+ *                 type: string
+ *                 format: uri
+ *                 example: https://example.com/category-image.webp
  *     responses:
  *       201:
  *         description: Category yaratildi

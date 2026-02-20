@@ -1,13 +1,13 @@
 const db = require('../config/db');
 
 const getAllCategories = () => {
-  const stmt = db.prepare('SELECT id, name, created_at FROM categories ORDER BY id DESC');
+  const stmt = db.prepare('SELECT id, name, img, created_at FROM categories ORDER BY id DESC');
   return stmt.all();
 };
 
-const createCategory = (name) => {
-  const stmt = db.prepare('INSERT INTO categories (name) VALUES (?)');
-  const info = stmt.run(name);
+const createCategory = ({ name, img }) => {
+  const stmt = db.prepare('INSERT INTO categories (name, img) VALUES (?, ?)');
+  const info = stmt.run(name, img || null);
   return info.lastInsertRowid;
 };
 

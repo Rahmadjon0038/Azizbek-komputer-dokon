@@ -1,10 +1,25 @@
 const Database = require('better-sqlite3');
+const bcrypt = require('bcryptjs');
 
 let db;
 
 try {
   db = new Database('./database.sqlite', { verbose: console.log });
   console.log('✅ SQLite DB muvaffaqiyatli ulandi!');
+
+  const defaultAdmin = {
+    fullName: process.env.DEFAULT_ADMIN_FULL_NAME || 'Default Admin',
+    phone: process.env.DEFAULT_ADMIN_PHONE || '+998900000001',
+    password: process.env.DEFAULT_ADMIN_PASSWORD || 'Admin12345',
+    role: 'admin',
+  };
+
+  const defaultUser = {
+    fullName: process.env.DEFAULT_USER_FULL_NAME || 'Default User',
+    phone: process.env.DEFAULT_USER_PHONE || '+998900000002',
+    password: process.env.DEFAULT_USER_PASSWORD || 'User12345',
+    role: 'user',
+  };
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -18,13 +33,39 @@ try {
     );
   `);
 
+  const getUserByPhoneStmt = db.prepare('SELECT id FROM users WHERE phone = ?');
+  const createUserStmt = db.prepare(
+    `INSERT INTO users (full_name, phone, password_hash, role)
+     VALUES (?, ?, ?, ?)`
+  );
+
+  const ensureDefaultUser = ({ fullName, phone, password, role }) => {
+    const exists = getUserByPhoneStmt.get(phone);
+    if (exists) return false;
+
+    const passwordHash = bcrypt.hashSync(password, 10);
+    createUserStmt.run(fullName, phone, passwordHash, role);
+    return true;
+  };
+
+  ensureDefaultUser(defaultAdmin);
+  ensureDefaultUser(defaultUser);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
+      img TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Existing databases might miss the new img column.
+  const categoryColumns = db.prepare("PRAGMA table_info('categories')").all();
+  const hasCategoryImg = categoryColumns.some((col) => col.name === 'img');
+  if (!hasCategoryImg) {
+    db.exec('ALTER TABLE categories ADD COLUMN img TEXT');
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS computers (
@@ -42,7 +83,10 @@ try {
 
   const categoryCount = db.prepare('SELECT COUNT(*) AS total FROM categories').get();
   if (categoryCount.total === 0) {
-    db.prepare('INSERT INTO categories (name) VALUES (?)').run('Kampyuter');
+    db.prepare('INSERT INTO categories (name, img) VALUES (?, ?)').run(
+      'Kampyuter',
+      'https://images.unsplash.com/photo-1518770660439-4636190af475'
+    );
   }
 
   const computerCount = db.prepare('SELECT COUNT(*) AS total FROM computers').get();
@@ -58,6 +102,14 @@ try {
       defaultCategory ? defaultCategory.id : null
     );
   }
+
+  console.log('🔐 Default loginlar:');
+  console.log(
+    `   Admin -> phone: ${defaultAdmin.phone}, password: ${defaultAdmin.password}, role: ${defaultAdmin.role}`
+  );
+  console.log(
+    `   User  -> phone: ${defaultUser.phone}, password: ${defaultUser.password}, role: ${defaultUser.role}`
+  );
 } catch (err) {
   console.error('❌ DB bilan ulanishda xato:', err.message);
   process.exit(1); // serverni to‘xtatish, chunki DB ishlamasa davom etmaydi

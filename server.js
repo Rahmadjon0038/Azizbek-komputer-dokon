@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const db = require('./config/db');
@@ -18,7 +19,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}`,
+        url: `http://localhost:${process.env.PORT || 5300}`,
         description: 'Development server',
       },
     ],
@@ -59,7 +60,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./routers/*.js'],
+  apis: [path.join(__dirname, 'routers/*.js')],
 };
 
 const specs = swaggerJsdoc(swaggerOptions);
@@ -68,7 +69,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.get('/api-docs.json', (req, res) => {
+  res.json(specs);
+});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 app.get('/', (req, res) => {
 	res.json({ ok: true, message: 'Azizbek-dokon-backend ishlayapti' });
 });
@@ -76,7 +80,7 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/api', catalogRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5300;
 app.listen(PORT, () => {
 	console.log(`✅ Server ishga tushdi: http://localhost:${PORT}`);
 	console.log(`📚 Swagger hujjatlar: http://localhost:${PORT}/api-docs`);

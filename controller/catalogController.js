@@ -21,6 +21,7 @@ const listCategories = (req, res) => {
 
 const addCategory = (req, res) => {
   const name = (req.body.name || '').trim();
+  const img = (req.body.img || '').trim();
   if (!name) {
     return res.status(400).json({ message: 'Category nomi majburiy' });
   }
@@ -30,7 +31,7 @@ const addCategory = (req, res) => {
     return res.status(409).json({ message: 'Bunday category allaqachon mavjud' });
   }
 
-  const id = createCategory(name);
+  const id = createCategory({ name, img });
   return res.status(201).json({
     message: 'Category yaratildi',
     category: getCategoryById(id),
