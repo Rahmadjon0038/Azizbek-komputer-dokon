@@ -5,6 +5,7 @@ const mapComputer = (row) => ({
   name: row.name,
   price: row.price,
   img: row.img,
+  categoryId: row.category_id,
   cat: row.cat,
   isLiked: Boolean(row.is_liked),
   inCart: Boolean(row.in_cart),
@@ -18,6 +19,7 @@ const getAllComputers = () => {
       c.name,
       c.price,
       c.img,
+      c.category_id,
       COALESCE(cat.name, '') AS cat,
       c.is_liked,
       c.in_cart,
@@ -37,6 +39,7 @@ const getComputerById = (id) => {
       c.name,
       c.price,
       c.img,
+      c.category_id,
       COALESCE(cat.name, '') AS cat,
       c.is_liked,
       c.in_cart,
@@ -48,6 +51,27 @@ const getComputerById = (id) => {
 
   const row = stmt.get(id);
   return row ? mapComputer(row) : null;
+};
+
+const getComputersByCategoryId = (categoryId) => {
+  const stmt = db.prepare(`
+    SELECT
+      c.id,
+      c.name,
+      c.price,
+      c.img,
+      c.category_id,
+      COALESCE(cat.name, '') AS cat,
+      c.is_liked,
+      c.in_cart,
+      c.created_at
+    FROM computers c
+    LEFT JOIN categories cat ON c.category_id = cat.id
+    WHERE c.category_id = ?
+    ORDER BY c.id DESC
+  `);
+
+  return stmt.all(categoryId).map(mapComputer);
 };
 
 const createComputer = ({ name, price, img, categoryId }) => {
@@ -76,6 +100,7 @@ const deleteComputerById = (id) => {
 
 module.exports = {
   getAllComputers,
+  getComputersByCategoryId,
   getComputerById,
   createComputer,
   updateComputerLike,

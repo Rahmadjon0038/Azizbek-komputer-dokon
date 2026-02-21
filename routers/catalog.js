@@ -4,6 +4,7 @@ const {
   addCategory,
   removeCategory,
   listComputers,
+  listCategoryComputers,
   addComputer,
   toggleLike,
   toggleCart,
@@ -36,10 +37,37 @@ router.get('/categories', listCategories);
 
 /**
  * @swagger
+ * /api/categories/{id}/computers:
+ *   get:
+ *     summary: Berilgan category ichidagi komputerlar
+ *     tags: [Catalog]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Categoryga tegishli komputerlar
+ *       404:
+ *         description: Category topilmadi
+ */
+router.get('/categories/:id/computers', listCategoryComputers);
+
+/**
+ * @swagger
  * /api/computers:
  *   get:
  *     summary: Komputer e'lonlari ro'yxati (auth kerak emas)
  *     tags: [Catalog]
+ *     parameters:
+ *       - in: query
+ *         name: categoryId
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Berilsa, faqat shu categorydagi komputerlar qaytadi
  *     responses:
  *       200:
  *         description: Komputerlar ro'yxati

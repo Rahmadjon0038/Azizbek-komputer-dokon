@@ -7,6 +7,7 @@ const {
 } = require('../models/categoryModel');
 const {
   getAllComputers,
+  getComputersByCategoryId,
   getComputerById,
   createComputer,
   updateComputerLike,
@@ -50,8 +51,39 @@ const removeCategory = (req, res) => {
 };
 
 const listComputers = (req, res) => {
+  const categoryIdRaw = req.query.categoryId;
+  if (categoryIdRaw !== undefined) {
+    const categoryId = Number(categoryIdRaw);
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      return res.status(400).json({ message: 'categoryId noto‘g‘ri' });
+    }
+
+    const category = getCategoryById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: 'Category topilmadi' });
+    }
+
+    const computers = getComputersByCategoryId(categoryId);
+    return res.json({ computers });
+  }
+
   const computers = getAllComputers();
   return res.json({ computers });
+};
+
+const listCategoryComputers = (req, res) => {
+  const categoryId = Number(req.params.id);
+  if (!Number.isInteger(categoryId) || categoryId <= 0) {
+    return res.status(400).json({ message: 'Category id noto‘g‘ri' });
+  }
+
+  const category = getCategoryById(categoryId);
+  if (!category) {
+    return res.status(404).json({ message: 'Category topilmadi' });
+  }
+
+  const computers = getComputersByCategoryId(categoryId);
+  return res.json({ category, computers });
 };
 
 const addComputer = (req, res) => {
@@ -136,6 +168,7 @@ module.exports = {
   addCategory,
   removeCategory,
   listComputers,
+  listCategoryComputers,
   addComputer,
   toggleLike,
   toggleCart,
